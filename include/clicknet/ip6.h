@@ -41,6 +41,13 @@ struct click_ip6 {
     struct in6_addr ip6_dst;	/* 24-39 dest address */
 };
 
+struct click_ip6_frag {
+    uint8_t ip6f_nxt;
+    uint8_t ip6f_reserved;
+    uint16_t ip6f_offlg;
+    uint32_t ip6f_ident;
+};
+
 #define ip6_v			ip6_ctlun.ip6_un3.ip6_un3_v
 #define ip6_vfc			ip6_ctlun.ip6_un2_vfc
 #define ip6_flow		ip6_ctlun.ip6_un1.ip6_un1_flow

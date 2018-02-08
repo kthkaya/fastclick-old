@@ -19,13 +19,14 @@ DuoEcho::oneToOne(Packet *p){
 Packet*
 DuoEcho::twoToTwo(Packet *p){
 	click_chatter("twoToTwo");
-	Packet *q = p->clone();
-	click_ip6_frag *ip6_frag = reinterpret_cast<click_ip6_frag *>(q->data()+14+40);
+	WritablePacket *wp = p->uniqueify();
+	click_ip6_frag *ip6_frag = 	reinterpret_cast<click_ip6_frag *>(wp->data()+14+40);
 	click_chatter("ip6f_nxt = %d",ip6_frag->ip6f_nxt);
 	click_chatter("ip6f reserved = %d",ip6_frag->ip6f_reserved);
 	click_chatter("ip6f offlg= %d",ip6_frag->ip6f_offlg);
 	click_chatter("ip6f idnet= %d",ip6_frag->ip6f_ident);
-	return q;
+
+	return wp;
 }
 
 int

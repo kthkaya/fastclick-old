@@ -1,6 +1,7 @@
 #include <click/config.h>
 #include <click/confparse.hh>
 #include <click/args.hh>
+#include <clicknet/ip6.h>
 #include <click/error.hh>
 #include "duoecho.hh"
 CLICK_DECLS

@@ -13,7 +13,8 @@ DuoEcho::~DuoEcho(){}
 Packet*
 DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
-	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
+	const click_ip6 *ip6h = (click_ip6*) p->ip_header();
+	//click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
 	click_tcp *tcph = (click_tcp *)(p->data()+54);
 
 	//click_ip6 *ip6 = (click_ip6 *)p->data();

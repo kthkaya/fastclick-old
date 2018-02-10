@@ -30,7 +30,7 @@ DuoEcho::oneToOne(Packet *p){
 	click_chatter("Constructed flow id: %s",flowId.unparse());
 	int *result = _transMap.find(flowId);
 	if (result){
-		click_chatter("Mapping found");
+		click_chatter("Mapping found, mapped int is %d",result);
 	}else{
 		int mSp = 5555;
 		click_chatter("Mapping not found. Inserting int 5555");

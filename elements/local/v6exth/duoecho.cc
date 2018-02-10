@@ -11,7 +11,18 @@ DuoEcho::~DuoEcho(){}
 
 Packet*
 DuoEcho::oneToOne(Packet *p){
-	click_chatter("oneToOne");
+	click_chatter("---------------From port 0 -> To port 0--------------");
+	IP6FlowID flowId(p);
+	click_chatter("Constructed flow id: %s",flowId.unparse());
+	int *result = _transMap.find(flowId);
+	if (result){
+		click_chatter("Mapping found");
+	}else{
+		int mSp = 5555;
+		click_chatter("Mapping not found. Inserting int 5555");
+		_transMap.insert(flowId,&mSp);
+	}
+	//click_chatter("oneToOne");
 	Packet *q = p->clone();
 	return q;
 }

@@ -24,7 +24,7 @@ DuoEcho::oneToOne(Packet *p){
 	uint16_t sport = ntohs(tcph->th_sport);
 	uint16_t dport = ntohs(tcph->th_dport);
 	//uint16_t mport;
-
+	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",ip6_src.unparse(),sport,ip6_dst.unparse(),dport);
 	IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
 	click_chatter("Constructed flow id: %s",flowId.unparse());
 	int *result = _transMap.find(flowId);
@@ -42,14 +42,15 @@ DuoEcho::oneToOne(Packet *p){
 
 Packet*
 DuoEcho::twoToTwo(Packet *p){
-	click_chatter("twoToTwo");
+	//click_chatter("twoToTwo");
 	WritablePacket *wp = p->uniqueify();
 	click_ip6_frag *ip6_frag = 	reinterpret_cast<click_ip6_frag *>(wp->data()+14+40);
+	/*
 	click_chatter("ip6f_nxt = %d",ip6_frag->ip6f_nxt);
 	click_chatter("ip6f reserved = %d",ip6_frag->ip6f_reserved);
 	click_chatter("ip6f offlg= %d",ip6_frag->ip6f_offlg);
 	click_chatter("ip6f idnet= %d",ip6_frag->ip6f_ident);
-
+	*/
 	return wp;
 }
 

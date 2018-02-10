@@ -4,30 +4,36 @@
 #include <clicknet/ip6.h>
 #include <clicknet/tcp.h>
 #include <click/error.hh>
+#include <click/straccum.hh>
+
 #include "duoecho.hh"
 CLICK_DECLS
 
-DuoEcho::DuoEcho(){}
+DuoEcho::DuoEcho(){_transMap(0);}
 DuoEcho::~DuoEcho(){}
 
 Packet*
 DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
 	//const click_ip6 *ip6h = (click_ip6*) p->ip_header();
+    StringAccum sa;
+
+
 	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
 	click_tcp *tcph = (click_tcp *)(p->data()+54);
-	click_chatter("IP version is %d",ip6h->ip6_ctlun.ip6_un2_vfc);
-	//click_ip6 *ip6 = (click_ip6 *)p->data();
-	// unsigned char *start = (unsigned char *)p->data();
+	click_chatter("IP version is %x",ntohs(ip6h->ip6_ctlun.ip6_un2_vfc));
+
 	IP6Address ip6_src = IP6Address(ip6h->ip6_src);
-	//IP6Address ip6_msrc;
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
+	String src= ip6_src.unparse_expanded();
+	String dst= ip6_src.unparse_expanded();
+
 	uint16_t sport = ntohs(tcph->th_sport);
 	uint16_t dport = ntohs(tcph->th_dport);
-	//uint16_t mport;
-	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",ip6_src.unparse(),sport,ip6_dst.unparse(),dport);
+	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),sport,dst.c_str(),dport);
+
 	IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
-	click_chatter("Constructed flow id: %s",flowId.unparse());
+	click_chatter("Constructed flow id: %s",flowId.unparse().c_str());
 	int *result = _transMap.find(flowId);
 	if (result){
 		click_chatter("Mapping found, mapped int is %d",result);

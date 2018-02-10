@@ -12,7 +12,9 @@ DuoEcho::~DuoEcho(){}
 Packet*
 DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
-	IP6FlowID flowId(p);
+	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
+	click_tcp *tcph = (click_tcp *)(p->data()+54);
+	IP6FlowID flowId(ip6h->ip6_src,tcph->th_sport,ip6h->ip6_dst,tcph->th_dport);
 	click_chatter("Constructed flow id: %s",flowId.unparse());
 	int *result = _transMap.find(flowId);
 	if (result){

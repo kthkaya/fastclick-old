@@ -2,6 +2,7 @@
 #include <click/confparse.hh>
 #include <click/args.hh>
 #include <clicknet/ip6.h>
+#include <clicknet/tcp.h>
 #include <click/error.hh>
 #include "duoecho.hh"
 CLICK_DECLS
@@ -14,7 +15,17 @@ DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
 	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
 	click_tcp *tcph = (click_tcp *)(p->data()+54);
-	IP6FlowID flowId(ip6h->ip6_src,tcph->th_sport,ip6h->ip6_dst,tcph->th_dport);
+
+	//click_ip6 *ip6 = (click_ip6 *)p->data();
+	// unsigned char *start = (unsigned char *)p->data();
+	IP6Address ip6_src = IP6Address(ip6h->ip6_src);
+	//IP6Address ip6_msrc;
+	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
+	uint16_t sport = ntohs(tcph->th_sport);
+	uint16_t dport = ntohs(tcph->th_dport);
+	//uint16_t mport;
+
+	IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
 	click_chatter("Constructed flow id: %s",flowId.unparse());
 	int *result = _transMap.find(flowId);
 	if (result){

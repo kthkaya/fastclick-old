@@ -9,7 +9,7 @@
 #include "duoecho.hh"
 CLICK_DECLS
 
-DuoEcho::DuoEcho(){_transMap(0);}
+DuoEcho::DuoEcho():_transMap(0){}
 DuoEcho::~DuoEcho(){}
 
 Packet*
@@ -26,11 +26,11 @@ DuoEcho::oneToOne(Packet *p){
 	IP6Address ip6_src = IP6Address(ip6h->ip6_src);
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();
-	String dst= ip6_src.unparse_expanded();
+	String dst= ip6_dst.unparse_expanded();
 
-	uint16_t sport = ntohs(tcph->th_sport);
-	uint16_t dport = ntohs(tcph->th_dport);
-	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),sport,dst.c_str(),dport);
+	uint16_t sport = tcph->th_sport;
+	uint16_t dport = tcph->th_dport;
+	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),ntohs(sport),dst.c_str(),ntohs(dport));
 
 	IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
 	click_chatter("Constructed flow id: %s",flowId.unparse().c_str());

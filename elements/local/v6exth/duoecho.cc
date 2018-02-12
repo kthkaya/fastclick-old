@@ -10,7 +10,7 @@
 CLICK_DECLS
 
 DuoEcho::DuoEcho():_transMap(0){}
-DuoEcho::Mapping::Mapping():_port(0), _v6Address(0){}
+DuoEcho::Mapping::Mapping():_port(0){}
 DuoEcho::~DuoEcho(){}
 
 Packet*
@@ -43,7 +43,7 @@ DuoEcho::oneToOne(Packet *p){
 		Mapping *newMap = new Mapping;
 		unsigned short prt =5555;
 		click_chatter("Mapping created");
-		newMap->initialize(ip6_src,prt);
+		newMap->initialize(prt);
 		click_chatter("Mapping initialized");
 		_transMap.insert(flowId,newMap);
 	}

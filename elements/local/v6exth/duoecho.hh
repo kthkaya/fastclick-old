@@ -49,8 +49,8 @@ class DuoEcho::Mapping {
 
 public:
 	Mapping() CLICK_COLD;
-	void initializeV4(const IPAddress &address, const unsigned short &port) { mappedAddress = address; _mappedPort = port;}
-	void initializeV6(const IP6Address &address, const unsigned short &port) { mappedAddress = address; _mappedPort = port;}
+	void initializeV4(const IPAddress &address, const unsigned short &port) { mappedAddress._v4 = address; _mappedPort = port;}
+	void initializeV6(const IP6Address &address, const unsigned short &port) { mappedAddress._v6 = address; _mappedPort = port;}
 
 protected:
 

@@ -26,6 +26,7 @@ public:
 
 private:
 	Map6 _transMap;
+	Map6 _departingMap, _returnMap;
 	unsigned short _nextPort;
 	Packet* oneToOne(Packet *p);
 	Packet* twoToTwo(Packet *p);

@@ -9,7 +9,7 @@
 #include "duoecho.hh"
 CLICK_DECLS
 
-DuoEcho::DuoEcho():_transMap(0),_nextPort(1025){}
+DuoEcho::DuoEcho():_transMap(0),_departingMap(0),_returnMap(0),_nextPort(1025){}
 DuoEcho::Mapping::Mapping():_port(0), _v6Address(){}
 DuoEcho::~DuoEcho(){}
 
@@ -17,18 +17,16 @@ Packet*
 DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
 	//const click_ip6 *ip6h = (click_ip6*) p->ip_header();
-    StringAccum sa;
-
 
 	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
 	click_tcp *tcph = (click_tcp *)(p->data()+54);
-	click_chatter("IP version is %x",ntohs(ip6h->ip6_ctlun.ip6_un2_vfc));
 
 	IP6Address ip6_src = IP6Address(ip6h->ip6_src);
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();
 	String dst= ip6_dst.unparse_expanded();
-
+	if (ip6_dst.is_ip4_mapped())
+		click_chatter("Destination v4 mapped %s",ip6_dst.ip4_address().unparse().c_str());
 	uint16_t sport = tcph->th_sport;
 	uint16_t dport = tcph->th_dport;
 	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),ntohs(sport),dst.c_str(),ntohs(dport));

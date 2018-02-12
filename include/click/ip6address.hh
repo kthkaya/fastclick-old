@@ -98,9 +98,12 @@ class IP6Address { public:
 	return _addr.s6_addr[11] == 0xFF && _addr.s6_addr[12] == 0xFE;
     }
 
+    /** @brief Return true iff the address has a Well Known prefix(WKP) (RFC 6052)
+     *
+     * An IPv6 address in the form of "64:ff9b::192.0.2.5" has a WKP
+     */
     bool has_wellKnown_prefix() const {
-    	return true;
-    	//return _addr.s6_addr[0] == 0x64; //&& data32()[1] == htonl(0xff9b0000);
+    	return _addr.s6_addr[0] == 0x64; && data32()[1] == htonl(0xff9b0000);
     }
 
     /** @brief Extract embedded Ethernet address into @a x.

@@ -98,6 +98,10 @@ class IP6Address { public:
 	return _addr.s6_addr[11] == 0xFF && _addr.s6_addr[12] == 0xFE;
     }
 
+    bool has_wellKnown_prefix() const {
+    	return data32()[0] == 64;
+    }
+
     /** @brief Extract embedded Ethernet address into @a x.
      * @param[out] x Ethernet address
      * @return true iff has_ether_address() */

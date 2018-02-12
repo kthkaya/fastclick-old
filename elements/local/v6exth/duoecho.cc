@@ -25,7 +25,7 @@ DuoEcho::oneToOne(Packet *p){
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();
 	String dst= ip6_dst.unparse_expanded();
-	if (ip6_dst.is_ip4_mapped())
+	if (ip6_dst.has_wellKnown_prefix())
 		click_chatter("Destination v4 mapped %s",ip6_dst.ip4_address().unparse().c_str());
 	uint16_t sport = tcph->th_sport;
 	uint16_t dport = tcph->th_dport;

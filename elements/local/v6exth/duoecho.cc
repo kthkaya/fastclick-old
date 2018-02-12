@@ -25,8 +25,9 @@ DuoEcho::oneToOne(Packet *p){
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();
 	String dst= ip6_dst.unparse_expanded();
-	if (ip6_dst.has_wellKnown_prefix())
+	if (ip6_dst.has_wellKnown_prefix()){
 		click_chatter("Destination v4 mapped %s",ip6_dst.ip4_address().unparse().c_str());
+	}
 	uint16_t sport = tcph->th_sport;
 	uint16_t dport = tcph->th_dport;
 	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),ntohs(sport),dst.c_str(),ntohs(dport));
@@ -60,7 +61,7 @@ DuoEcho::twoToTwo(Packet *p){
 	click_chatter("ip6f reserved = %d",ip6_frag->ip6f_reserved);
 	click_chatter("ip6f offlg= %d",ip6_frag->ip6f_offlg);
 	click_chatter("ip6f idnet= %d",ip6_frag->ip6f_ident);
-	*/
+	 */
 	return wp;
 }
 

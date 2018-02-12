@@ -9,7 +9,7 @@
 #include "duoecho.hh"
 CLICK_DECLS
 
-DuoEcho::DuoEcho():_transMap(0){}
+DuoEcho::DuoEcho():_transMap(0),_nextPort(1025){}
 DuoEcho::Mapping::Mapping():_port(0), _v6Address(){}
 DuoEcho::~DuoEcho(){}
 
@@ -39,11 +39,11 @@ DuoEcho::oneToOne(Packet *p){
 	if (result){
 		click_chatter("Mapping found, mapped IP is %s and port is %d",result->_v6Address.unparse_expanded().c_str(), result->_port);
 	}else{
-		click_chatter("Mapping not found. Inserting int 555");
+		click_chatter("Mapping not found. Inserting next port %d", _nextPort);
 		Mapping *newMap = new Mapping;
-		unsigned short prt =5555;
 		click_chatter("Mapping created");
-		newMap->initialize(ip6_src,prt);
+		newMap->initialize(ip6_src,_nextPort);
+		_nextPort++;
 		click_chatter("Mapping initialized");
 		_transMap.insert(flowId,newMap);
 	}

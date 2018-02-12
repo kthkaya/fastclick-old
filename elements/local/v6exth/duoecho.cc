@@ -9,8 +9,8 @@
 #include "duoecho.hh"
 CLICK_DECLS
 
-DuoEcho::DuoEcho():_transMap(0),_departingMap(0),_returnMap(0),_nextPort(1025){}
-DuoEcho::Mapping::Mapping():_port(0), _v6Address(){}
+DuoEcho::DuoEcho():_transMap(0),_departingMap(0),_returnMap(0),mappedv4Address("192.0.2.5"),_nextPort(1025){}
+DuoEcho::Mapping::Mapping():_mappedPort(0), mappedAddress(){}
 DuoEcho::~DuoEcho(){}
 
 Packet*
@@ -37,12 +37,12 @@ DuoEcho::oneToOne(Packet *p){
 	click_chatter("Constructed flow id: %s",flowId.unparse().c_str());
 	Mapping *result = _transMap.find(flowId);
 	if (result){
-		click_chatter("Mapping found, mapped IP is %s and port is %d",result->_v6Address.unparse_expanded().c_str(), result->_port);
+		click_chatter("Mapping found, mapped IP is %s and port is %d",result->mappedAddress._v4.unparse().c_str(), result->_mappedPort);
 	}else{
 		click_chatter("Mapping not found. Inserting next port %d", _nextPort);
 		Mapping *newMap = new Mapping;
 		click_chatter("Mapping created");
-		newMap->initialize(ip6_src,_nextPort);
+		newMap->initializeV4(mappedv4Address,_nextPort);
 		_nextPort++;
 		click_chatter("Mapping initialized");
 		_transMap.insert(flowId,newMap);

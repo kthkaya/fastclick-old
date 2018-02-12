@@ -6,12 +6,18 @@
 #include <click/ip6flowid.hh>
 CLICK_DECLS
 
+typedef union {
+	IP6Address _v6;
+	IPAddress _v4;
+} netAddress;
 
 class DuoEcho : public BatchElement {
 public:
 	class Mapping;
 	//typedef HashContainer<IP6FlowID> Map;
 	typedef HashMap<IP6FlowID, Mapping *> Map6;
+	typedef HashMap<IPFlowID, Mapping *> Map4;
+	IPAddress mappedv4Address;
 	DuoEcho();
 	~DuoEcho();
 	const char *class_name() const { return "DuoEcho"; }
@@ -35,18 +41,25 @@ private:
 
 class DuoEcho::Mapping {
 
+	union address{
+			IP6Address _v6;
+			IPAddress _v4;
+			address() {memset(this,0,sizeof(address));};
+		};
+
 public:
 	Mapping() CLICK_COLD;
-	void initialize(const IP6Address &address, const unsigned short &port) { _v6Address = address; _port = port;}
+	void initializeV4(const IPAddress &address, const unsigned short &port) { mappedAddress = address; _mappedPort = port;}
+	void initializeV6(const IP6Address &address, const unsigned short &port) { mappedAddress = address; _mappedPort = port;}
 
 protected:
-	IP6Address _v6Address;
-	unsigned short _port;
+
+	address mappedAddress;
+
+	unsigned short _mappedPort;
 
 	friend class DuoEcho;
 };
-
-
 
 
 CLICK_ENDDECLS

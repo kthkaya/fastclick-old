@@ -35,9 +35,10 @@ class DuoEcho::Mapping {
 
 public:
 	Mapping() CLICK_COLD;
-	void initialize(const unsigned short &port) {_port = port;}
+	void initialize(const IP6Address &address, const unsigned short &port) { _v6Address = address; _port = port;}
 
 protected:
+	IP6Address _v6Address;
 	unsigned short _port;
 
 	friend class DuoEcho;

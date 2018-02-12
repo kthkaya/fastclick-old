@@ -103,8 +103,7 @@ class IP6Address { public:
      * An IPv6 address in the form of "64:ff9b::192.0.2.5" has a WKP
      */
     bool has_wellKnown_prefix() const {
-    	return _addr.s6_addr[0] == 0x64 && _addr.s6_addr16[1] == 0xff9b;
-    			//data32()[2] == htonl(0xff9b0000);
+        return data32()[0] == htonl(0x0064ff9b);
     }
 
     /** @brief Extract embedded Ethernet address into @a x.

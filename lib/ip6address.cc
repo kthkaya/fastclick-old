@@ -110,10 +110,12 @@ IP6Address::ether_address(EtherAddress &mac) const
 IPAddress
 IP6Address::ip4_address() const
 {
-    if (is_ip4_mapped()) {
-	return IPAddress(data32()[3]);
-    } else
-	return IPAddress();
+	if (is_ip4_mapped()) {
+		return IPAddress(data32()[3]);
+	} else if (has_wellKnown_prefix()) {
+		return IPAddress(data32()[12]);
+	} else
+		return IPAddress();
 }
 
 void

@@ -99,7 +99,7 @@ class IP6Address { public:
     }
 
     bool has_wellKnown_prefix() const {
-    	return data32()[0] == 64;
+    	return _addr.s6_addr[0] == 0x64 && _addr.s6_addr[1] == 0xff9b;
     }
 
     /** @brief Extract embedded Ethernet address into @a x.

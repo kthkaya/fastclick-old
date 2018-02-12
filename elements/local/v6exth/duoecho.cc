@@ -41,8 +41,9 @@ DuoEcho::oneToOne(Packet *p){
 	}else{
 		click_chatter("Mapping not found. Inserting int 555");
 		Mapping *newMap = new Mapping;
+		unsigned short prt =5555;
 		click_chatter("Mapping created");
-		newMap->initialize(ip6_src,5555);
+		newMap->initialize(ip6_src,prt);
 		click_chatter("Mapping initialized");
 		_transMap.insert(flowId,newMap);
 	}

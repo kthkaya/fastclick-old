@@ -40,7 +40,7 @@ DuoEcho::oneToOne(Packet *p){
 		click_chatter("Mapping found, mapped int is %d",result->_port);
 	}else{
 		click_chatter("Mapping not found. Inserting int 555");
-		Mapping *newMap;
+		Mapping *newMap = new Mapping;
 		click_chatter("Mapping created");
 		newMap->initialize(ip6_src,5555);
 		click_chatter("Mapping initialized");

@@ -10,6 +10,7 @@
 CLICK_DECLS
 
 DuoEcho::DuoEcho():_transMap(0){}
+DuoEcho::Mapping::Mapping():_port(0), _v6Address(0){}
 DuoEcho::~DuoEcho(){}
 
 Packet*

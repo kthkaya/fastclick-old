@@ -9,8 +9,9 @@ CLICK_DECLS
 
 class DuoEcho : public BatchElement {
 public:
+	class Mapping;
 	//typedef HashContainer<IP6FlowID> Map;
-    typedef HashMap<IP6FlowID, int *> Map6;
+	typedef HashMap<IP6FlowID, Mapping *> Map6;
 	DuoEcho();
 	~DuoEcho();
 	const char *class_name() const { return "DuoEcho"; }
@@ -20,14 +21,31 @@ public:
 	void push(int port, Packet *p);
 
 #if HAVE_BATCH
-    void push_batch(int port, PacketBatch *batch) override;
+	void push_batch(int port, PacketBatch *batch) override;
 #endif
 
 private:
-    Map6 _transMap;
+	Map6 _transMap;
 	Packet* oneToOne(Packet *p);
 	Packet* twoToTwo(Packet *p);
 };
+
+
+class DuoEcho::Mapping {
+
+public:
+	Mapping() CLICK_COLD;
+	void initialize(const IP6Address &address, const unsigned short &port) { _v6Address = address; _port = port;}
+
+protected:
+	IP6Address _v6Address;
+	unsigned short _port;
+
+	friend class DuoEcho;
+};
+
+
+
 
 CLICK_ENDDECLS
 #endif

@@ -32,15 +32,16 @@ DuoEcho::oneToOne(Packet *p){
 	uint16_t dport = tcph->th_dport;
 	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),ntohs(sport),dst.c_str(),ntohs(dport));
 
-	IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
+	const IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
 	click_chatter("Constructed flow id: %s",flowId.unparse().c_str());
-	int *result = _transMap.find(flowId);
+	Mapping *result = _transMap.find(flowId);
 	if (result){
-		click_chatter("Mapping found, mapped int is %d",result);
+		click_chatter("Mapping found, mapped int is %d",result->_port);
 	}else{
-		int mSp = 5555;
-		click_chatter("Mapping not found. Inserting int 5555");
-		_transMap.insert(flowId,&mSp);
+		click_chatter("Mapping not found. Inserting int 555");
+		Mapping *newMap;
+		newMap->initialize(ip6_src,5555);
+		_transMap.insert(flowId,newMap);
 	}
 	//click_chatter("oneToOne");
 	Packet *q = p->clone();

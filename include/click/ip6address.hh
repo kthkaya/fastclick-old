@@ -127,7 +127,7 @@ class IP6Address { public:
      * embedded IPv4 address is "w.x.y.z". */
     inline bool is_ip4_mapped() const {
     	bool isMapped = data32()[0] == 0 && data32()[1] == 0 && data32()[2] == htonl(0x0000FFFFU);
-    	return isMapped || has_wellKnown_prefix();
+    	return (isMapped || has_wellKnown_prefix());
     }
 
     /** @brief Return true iff the address is a multicast address

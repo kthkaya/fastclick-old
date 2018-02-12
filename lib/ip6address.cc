@@ -112,8 +112,6 @@ IP6Address::ip4_address() const
 {
 	if (is_ip4_mapped()) {
 		return IPAddress(data32()[3]);
-	} else if (has_wellKnown_prefix()) {
-		return IPAddress(data32()[13]);
 	} else
 		return IPAddress();
 }

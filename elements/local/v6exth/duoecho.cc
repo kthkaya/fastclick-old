@@ -27,7 +27,7 @@ DuoEcho::oneToOne(Packet *p){
 	String dst= ip6_dst.unparse_expanded();
 	if (ip6_dst.has_wellKnown_prefix())
 		click_chatter("Has WKP true");
-	click_chatter("Destination v4 mapped %s",ip6_dst.ip4_address().unparse());
+	click_chatter("Destination v4 mapped %d",ip6_dst.ip4_address().unparse().c_str());
 
 	uint16_t sport = tcph->th_sport;
 	uint16_t dport = tcph->th_dport;

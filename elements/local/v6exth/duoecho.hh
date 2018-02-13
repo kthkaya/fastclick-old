@@ -32,10 +32,15 @@ public:
 
 private:
 	Map6 _transMap;
-	Map6 _departingMap, _returnMap;
+	Map6 _departingMap;
+	Map4 _returnMap;
 	unsigned short _nextPort;
 	Packet* oneToOne(Packet *p);
 	Packet* twoToTwo(Packet *p);
+	//void translate(Packet *p, click_ip v4l3h, click_ip6 v6l3h,  bool direction, Mapping *addressAndPort);
+	Packet* translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Mapping *addressAndPort);
+	Packet* translate46(Packet *p, const click_ip *v4l3h, const click_tcp *l4h, Mapping *addressAndPort);
+	Packet* testingPush(Packet *p);
 };
 
 

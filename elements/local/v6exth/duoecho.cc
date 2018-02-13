@@ -9,18 +9,127 @@
 #include "duoecho.hh"
 CLICK_DECLS
 
-DuoEcho::DuoEcho():_transMap(0),_departingMap(0),_returnMap(0),mappedv4Address("192.0.2.5"),_nextPort(1025){}
+DuoEcho::DuoEcho():_transMap(0),_departingMap(0),_returnMap(0),mappedv4Address("192.0.2.1"),_nextPort(1025){}
 DuoEcho::Mapping::Mapping():_mappedPort(0), mappedAddress(){}
 DuoEcho::~DuoEcho(){}
+
+/*
+void DuoEcho::translate(WritablePacket *wp, bool direction, Mapping *addressAndPort){
+	// Direction=1 Translate 6 to 4. Direction=0 Translate 4 to 6.
+	if (direction) {
+		WritablePacket *wp = p->push(20)
+		addressAndPort->mappedAddress._v6;
+		addressAndPort->_mappedPort;
+	} else {
+
+	}
+
+}
+ */
+
+Packet*
+DuoEcho::testingPush(Packet *p){
+	click_ip6 ip6h;
+	WritablePacket *wp= p->push(20);
+	/*
+	wp->t
+	memmove(wp->data(),wp->data()+20,14);
+	memcpy(wp->data()+14,ip6h,40);
+	*/
+}
+
+
+Packet*
+DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Mapping *addressAndPort){
+
+	click_ip *ip;
+	click_tcp *tcp;
+	click_udp *udp;
+	WritablePacket *wp = Packet::make(sizeof(*ip) + ntohs(v6l3h->ip6_plen));
+	unsigned char *start_of_p= (unsigned char *)(v6l3h+1);
+	if (wp==0) {
+		click_chatter("can not make packet!");
+		assert(0);
+	}
+
+	//set ipv4 header
+	ip->ip_v = 4;
+	ip->ip_hl =5;
+	ip->ip_tos =0;
+	ip->ip_len = htons(sizeof(*ip) + ntohs(v6l3h->ip6_plen));
+
+	ip->ip_id = htons(0);
+	//need to change
+	//ip->ip_id[0]=ip6->ip_flow[1];
+	//ip->ip_id[1]=ip6->ip_flow[2];
+
+	//set Don't Fragment flag to true, all other flags to false,
+	//set fragement offset: 0
+	ip->ip_off = htons(IP_DF);
+	//need to deal with fragmentation later
+
+	//we do not change the ttl since the packet has to go through v4 routing table
+	ip->ip_ttl = v6l3h->ip6_hlim;
+
+	//set the src and dst address
+	ip->ip_src = addressAndPort->mappedAddress._v4;
+	ip->ip_dst = IP6Address(v6l3h->ip6_dst).ip4_address();
+
+	//copy the actual payload of packet
+	memcpy((unsigned char *)tcp, start_of_p, ntohs(v6l3h->ip6_plen));
+	//set the tcp header checksum
+	//The tcp checksum for ipv4 packet is include the tcp packet, and the 96 bits
+	//TCP pseudoheader, which consists of Source Address, Destination Address,
+	//1 byte zero, 1 byte PTCL, 2 byte TCP length.
+
+	if (v6l3h->ip6_nxt == 6) //TCP
+	{
+		ip->ip_p = v6l3h->ip6_nxt;
+
+		//set the ip header checksum
+		ip->ip_sum = 0;
+		tcp->th_sum = 0;
+
+		uint16_t tlen = ntohs(v6l3h->ip6_plen);
+		uint16_t csum = click_in_cksum((unsigned char *) tcp, tlen);
+		tcp->th_sum = click_in_cksum_pseudohdr(csum, ip, tlen);
+		ip->ip_sum = click_in_cksum((unsigned char *)ip, sizeof(click_ip));
+
+	}
+	else if (v6l3h->ip6_nxt ==17) //UDP
+	{
+		ip->ip_p = v6l3h->ip6_nxt;
+
+		//set the ip header checksum
+		ip->ip_sum=0;
+		//udp->uh_sum = 0;
+
+		uint16_t tlen = ntohs(v6l3h->ip6_plen);
+		uint16_t csum = click_in_cksum((unsigned char *) udp, tlen);
+		//udp->uh_sum = click_in_cksum_pseudohdr(csum, ip, tlen);
+		ip->ip_sum = click_in_cksum((unsigned char *)ip, sizeof(click_ip));
+
+	}
+	else if (v6l3h->ip6_nxt== 58)
+	{
+		ip->ip_p = 1;
+		//icmp 4->6 translation is dealt by caller
+	}
+
+	else
+	{
+		// will deal with other protocols later
+	}
+	return wp;
+
+}
 
 Packet*
 DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
 	//const click_ip6 *ip6h = (click_ip6*) p->ip_header();
-
 	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
 	click_tcp *tcph = (click_tcp *)(p->data()+54);
-
 	IP6Address ip6_src = IP6Address(ip6h->ip6_src);
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();
@@ -31,25 +140,36 @@ DuoEcho::oneToOne(Packet *p){
 
 	uint16_t sport = tcph->th_sport;
 	uint16_t dport = tcph->th_dport;
-	click_chatter("Passing SA: %s, SP: %d, DA: %s, DP: %d",src.c_str(),ntohs(sport),dst.c_str(),ntohs(dport));
 
-	const IP6FlowID flowId(ip6_src,sport,ip6_dst,dport);
-	click_chatter("Constructed flow id: %s",flowId.unparse().c_str());
-	Mapping *result = _transMap.find(flowId);
-	if (result){
-		click_chatter("Mapping found, mapped IP is %s and port is %d",result->mappedAddress._v4.unparse().c_str(), result->_mappedPort);
+	const IP6FlowID departingFlowID(ip6_src,sport,ip6_dst,dport);
+
+	click_chatter("Constructed flow id: %s",departingFlowID.unparse().c_str());
+	Mapping *departingMapping = _departingMap.find(departingFlowID);
+
+	if (departingMapping){
+
+		click_chatter("Mapping found, mapped IP is %s and port is %d",departingMapping->mappedAddress._v4.unparse().c_str(), departingMapping->_mappedPort);
+
+
 	}else{
 		click_chatter("Mapping not found. Inserting next port %d", _nextPort);
-		Mapping *newMap = new Mapping;
-		click_chatter("Mapping created");
-		newMap->initializeV4(mappedv4Address,_nextPort);
-		_nextPort++;
+		//Create mapping for departing traffic
+		departingMapping = new Mapping;
+		departingMapping->initializeV4(mappedv4Address,_nextPort);
 		click_chatter("Mapping initialized");
-		_transMap.insert(flowId,newMap);
+		_departingMap.insert(departingFlowID,departingMapping);
+
+		//Create mapping for the return traffic
+		const IPFlowID returnFlowID(ip6_dst.ip4_address(),dport,mappedv4Address,_nextPort);
+		Mapping *returnMapping = new Mapping;
+		returnMapping->initializeV6(ip6_src,sport);
+		_returnMap.insert(returnFlowID,returnMapping);
+		_nextPort++;
+
 	}
 	//click_chatter("oneToOne");
-	Packet *q = p->clone();
-	return q;
+	//Packet *q = p->clone();
+	return translate64(p,ip6h,tcph,departingMapping);;
 }
 
 Packet*

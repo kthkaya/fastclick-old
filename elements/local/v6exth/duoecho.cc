@@ -51,6 +51,11 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 		click_chatter("can not make packet!");
 		assert(0);
 	}
+	//Initialize
+	memset(wp->data(), '\0', wp->length());
+	ip = (click_ip *)wp->data();
+	tcp = (click_tcp *)(ip+1);
+	udp = (click_udp *)(ip+1);
 
 	//set ipv4 header
 	ip->ip_v = 4;
@@ -85,7 +90,7 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	if (v6l3h->ip6_nxt == 6) //TCP
 	{
 		ip->ip_p = v6l3h->ip6_nxt;
-
+		v6l3h->ip6_nxt;
 		//set the ip header checksum
 		ip->ip_sum = 0;
 		tcp->th_sum = 0;

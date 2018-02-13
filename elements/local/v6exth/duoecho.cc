@@ -43,8 +43,8 @@ Packet*
 DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Mapping *addressAndPort){
 
 	click_ip *ip;
-	click_tcp *tcp;
-	click_udp *udp;
+	click_tcp *tcph;
+	click_udp *udph;
 	WritablePacket *wp = Packet::make(sizeof(*ip) + ntohs(v6l3h->ip6_plen));
 	unsigned char *start_of_p= (unsigned char *)(v6l3h+1);
 	if (wp==0) {
@@ -54,8 +54,8 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	//Initialize
 	memset(wp->data(), '\0', wp->length());
 	ip = (click_ip *)wp->data();
-	tcp = (click_tcp *)(ip+1);
-	udp = (click_udp *)(ip+1);
+	tcph = (click_tcp *)(ip+1);
+	udph = (click_udp *)(ip+1);
 
 	//set ipv4 header
 	ip->ip_v = 4;
@@ -81,7 +81,7 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	ip->ip_dst = IP6Address(v6l3h->ip6_dst).ip4_address();
 
 	//copy the actual payload of packet
-	memcpy((unsigned char *)tcp, start_of_p, ntohs(v6l3h->ip6_plen));
+	memcpy((unsigned char *)tcph, start_of_p, ntohs(v6l3h->ip6_plen));
 	//set the tcp header checksum
 	//The tcp checksum for ipv4 packet is include the tcp packet, and the 96 bits
 	//TCP pseudoheader, which consists of Source Address, Destination Address,
@@ -90,14 +90,14 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	if (v6l3h->ip6_nxt == 6) //TCP
 	{
 		ip->ip_p = v6l3h->ip6_nxt;
-		v6l3h->ip6_nxt;
 		//set the ip header checksum
 		ip->ip_sum = 0;
-		tcp->th_sum = 0;
+		tcph->th_sum = 0;
+		tcph->th_sport = addressAndPort->_mappedPort;
 
 		uint16_t tlen = ntohs(v6l3h->ip6_plen);
-		uint16_t csum = click_in_cksum((unsigned char *) tcp, tlen);
-		tcp->th_sum = click_in_cksum_pseudohdr(csum, ip, tlen);
+		uint16_t csum = click_in_cksum((unsigned char *) tcph, tlen);
+		tcph->th_sum = click_in_cksum_pseudohdr(csum, ip, tlen);
 		ip->ip_sum = click_in_cksum((unsigned char *)ip, sizeof(click_ip));
 
 	}
@@ -107,10 +107,11 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 
 		//set the ip header checksum
 		ip->ip_sum=0;
-		//udp->uh_sum = 0;
+		//udph->uh_sum = 0;
+		//udp->uh_sport = addressAndPort->_mappedPort;
 
 		uint16_t tlen = ntohs(v6l3h->ip6_plen);
-		uint16_t csum = click_in_cksum((unsigned char *) udp, tlen);
+		uint16_t csum = click_in_cksum((unsigned char *) udph, tlen);
 		//udp->uh_sum = click_in_cksum_pseudohdr(csum, ip, tlen);
 		ip->ip_sum = click_in_cksum((unsigned char *)ip, sizeof(click_ip));
 
@@ -133,8 +134,8 @@ Packet*
 DuoEcho::oneToOne(Packet *p){
 	click_chatter("---------------From port 0 -> To port 0--------------");
 	//const click_ip6 *ip6h = (click_ip6*) p->ip_header();
-	click_ip6 *ip6h = (click_ip6 *)(p->data()+14);
-	click_tcp *tcph = (click_tcp *)(p->data()+54);
+	click_ip6 *ip6h = (click_ip6 *)(p->data());
+	click_tcp *tcph = (click_tcp *)(p->data()+40);
 	IP6Address ip6_src = IP6Address(ip6h->ip6_src);
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();

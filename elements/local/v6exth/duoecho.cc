@@ -35,7 +35,7 @@ DuoEcho::testingPush(Packet *p){
 	wp->t
 	memmove(wp->data(),wp->data()+20,14);
 	memcpy(wp->data()+14,ip6h,40);
-	*/
+	 */
 }
 
 
@@ -134,42 +134,44 @@ DuoEcho::oneToOne(Packet *p){
 	IP6Address ip6_dst = IP6Address(ip6h->ip6_dst);
 	String src= ip6_src.unparse_expanded();
 	String dst= ip6_dst.unparse_expanded();
-	if (ip6_dst.has_wellKnown_prefix())
+	if (ip6_dst.has_wellKnown_prefix()) {
 		click_chatter("Has WKP true");
-	click_chatter("Destination v4 mapped %s",ip6_dst.ip4_address().unparse().c_str());
+		click_chatter("Destination v4 mapped %s",ip6_dst.ip4_address().unparse().c_str());
 
-	uint16_t sport = tcph->th_sport;
-	uint16_t dport = tcph->th_dport;
+		uint16_t sport = tcph->th_sport;
+		uint16_t dport = tcph->th_dport;
 
-	const IP6FlowID departingFlowID(ip6_src,sport,ip6_dst,dport);
+		const IP6FlowID departingFlowID(ip6_src,sport,ip6_dst,dport);
 
-	click_chatter("Constructed flow id: %s",departingFlowID.unparse().c_str());
-	Mapping *departingMapping = _departingMap.find(departingFlowID);
+		click_chatter("Constructed flow id: %s",departingFlowID.unparse().c_str());
+		Mapping *departingMapping = _departingMap.find(departingFlowID);
 
-	if (departingMapping){
+		if (departingMapping){
 
-		click_chatter("Mapping found, mapped IP is %s and port is %d",departingMapping->mappedAddress._v4.unparse().c_str(), departingMapping->_mappedPort);
+			click_chatter("Mapping found, mapped IP is %s and port is %d",departingMapping->mappedAddress._v4.unparse().c_str(), departingMapping->_mappedPort);
 
 
-	}else{
-		click_chatter("Mapping not found. Inserting next port %d", _nextPort);
-		//Create mapping for departing traffic
-		departingMapping = new Mapping;
-		departingMapping->initializeV4(mappedv4Address,_nextPort);
-		click_chatter("Mapping initialized");
-		_departingMap.insert(departingFlowID,departingMapping);
+		}else{
+			click_chatter("Mapping not found. Inserting next port %d", _nextPort);
+			//Create mapping for departing traffic
+			departingMapping = new Mapping;
+			departingMapping->initializeV4(mappedv4Address,_nextPort);
+			click_chatter("Mapping initialized");
+			_departingMap.insert(departingFlowID,departingMapping);
 
-		//Create mapping for the return traffic
-		const IPFlowID returnFlowID(ip6_dst.ip4_address(),dport,mappedv4Address,_nextPort);
-		Mapping *returnMapping = new Mapping;
-		returnMapping->initializeV6(ip6_src,sport);
-		_returnMap.insert(returnFlowID,returnMapping);
-		_nextPort++;
+			//Create mapping for the return traffic
+			const IPFlowID returnFlowID(ip6_dst.ip4_address(),dport,mappedv4Address,_nextPort);
+			Mapping *returnMapping = new Mapping;
+			returnMapping->initializeV6(ip6_src,sport);
+			_returnMap.insert(returnFlowID,returnMapping);
+			_nextPort++;
 
+		}
+		return translate64(p,ip6h,tcph,departingMapping);
 	}
 	//click_chatter("oneToOne");
-	//Packet *q = p->clone();
-	return translate64(p,ip6h,tcph,departingMapping);;
+	return p->clone();
+	//return translate64(p,ip6h,tcph,departingMapping);
 }
 
 Packet*

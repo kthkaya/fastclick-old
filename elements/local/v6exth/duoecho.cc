@@ -243,9 +243,8 @@ DuoEcho::twoToTwo(Packet *p){
 	click_ip *iph = (click_ip *)(p->data());
 	click_tcp *tcph = (click_tcp *)(p->data()+20);
 	//String v4wkpEmbed = "64:ff9b::" + IPAddress(iph->ip_src).unparse();
-	IP6Address *adr = new IP6Address("64:ff9b::" + IPAddress(iph->ip_src).unparse());
-	click_chatter("Did it work? %s",adr->unparse_expanded().c_str());
-
+	//IP6Address *adr = new IP6Address("64:ff9b::" + IPAddress(iph->ip_src).unparse());
+	//click_chatter("Did it work? %s",adr->unparse_expanded().c_str());
 	const IPFlowID returnFlowID(iph->ip_src,tcph->th_sport,iph->ip_dst,tcph->th_dport);
 	click_chatter("Constructed flow id: %s",returnFlowID.unparse().c_str());
 	Mapping *returnMapping = _returnMap.find(returnFlowID);
@@ -253,6 +252,7 @@ DuoEcho::twoToTwo(Packet *p){
 		click_chatter("Mapping found, mapped IP is %s and port is %d",returnMapping->mappedAddress._v4.unparse().c_str(), returnMapping->_mappedPort);
 		return translate46(p,iph,tcph,returnMapping);
 	}
+	click_chatter("Mapping not found. Killing packet");
 	//Drop the packet if no existing maping is found
 	p->kill();
 }

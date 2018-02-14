@@ -225,7 +225,7 @@ DuoEcho::oneToOne(Packet *p){
 			const IPFlowID returnFlowID(ip6_dst.ip4_address(),dport,mappedv4Address,htons(_nextPort));
 			click_chatter("Inserting for return traffic: Flow id: %s",returnFlowID.unparse().c_str());
 			Mapping *returnMapping = new Mapping;
-			returnMapping->initializeV6(ip6_src,sport);
+			returnMapping->initializeV6(ip6_src,htons(sport));
 			_returnMap.insert(returnFlowID,returnMapping);
 			_nextPort++;
 

@@ -245,7 +245,7 @@ DuoEcho::twoToTwo(Packet *p){
 	IP6Address *adr = new IP6Address("64:ff9b::" + IPAddress(iph->ip_src).unparse());
 	click_chatter("Did it work? %s",adr->unparse_expanded().c_str());
 
-	const IPFlowID returnFlowID(p);
+	const IPFlowID returnFlowID(iph->ip_src,tcph->th_sport,iph->ip_dst,tcph->th_dport);
 	Mapping *returnMapping = _returnMap.find(returnFlowID);
 	if (returnMapping){
 

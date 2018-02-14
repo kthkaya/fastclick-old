@@ -217,12 +217,12 @@ DuoEcho::oneToOne(Packet *p){
 			click_chatter("Mapping not found. Inserting next port %d", _nextPort);
 			//Create mapping for departing traffic
 			departingMapping = new Mapping;
-			departingMapping->initializeV4(mappedv4Address,htons(_nextPort));
+			departingMapping->initializeV4(mappedv4Address,_nextPort);
 			click_chatter("Mapping initialized");
 			_departingMap.insert(departingFlowID,departingMapping);
 
 			//Create mapping for the return traffic
-			const IPFlowID returnFlowID(ip6_dst.ip4_address(),dport,mappedv4Address,htons(_nextPort));
+			const IPFlowID returnFlowID(ip6_dst.ip4_address(),dport,mappedv4Address,_nextPort);
 			click_chatter("Inserting for return traffic: Flow id: %s",returnFlowID.unparse().c_str());
 			Mapping *returnMapping = new Mapping;
 			returnMapping->initializeV6(ip6_src,sport);

@@ -34,7 +34,7 @@ private:
 	Map6 _transMap;
 	Map6 _departingMap;
 	Map4 _returnMap;
-	unsigned short _nextPort;
+	uint16_t _nextPort;
 	Packet* oneToOne(Packet *p);
 	Packet* twoToTwo(Packet *p);
 	//void translate(Packet *p, click_ip v4l3h, click_ip6 v6l3h,  bool direction, Mapping *addressAndPort);

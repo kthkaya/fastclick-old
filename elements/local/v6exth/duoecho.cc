@@ -79,6 +79,7 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	//set the src and dst address
 	ip->ip_src = addressAndPort->mappedAddress._v4;
 	ip->ip_dst = IP6Address(v6l3h->ip6_dst).ip4_address();
+	//Set the annotation, other elements down the pipeline may need it
 	wp->set_dst_ip_anno(ip->ip_dst);
 
 	//copy the actual payload of packet
@@ -94,7 +95,7 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 		//set the ip header checksum
 		ip->ip_sum = 0;
 		tcph->th_sum = 0;
-		tcph->th_sport = addressAndPort->_mappedPort;
+		tcph->th_sport = htons(addressAndPort->_mappedPort);
 
 		uint16_t tlen = ntohs(v6l3h->ip6_plen);
 		uint16_t csum = click_in_cksum((unsigned char *) tcph, tlen);
@@ -130,6 +131,59 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	return wp;
 
 }
+
+Packet*
+DuoEcho::translate46(Packet *p, const click_ip *v4l3h, const click_tcp *l4h, Mapping *addressAndPort){
+
+	WritablePacket *wp = Packet::make(sizeof(click_ip6)-sizeof(click_ip)+ntohs(v4l3h->ip_len));
+	unsigned char *start_of_p= (unsigned char *)(v4l3h+1);
+	if (wp==0) {
+		click_chatter("can not make packet!");
+		assert(0);
+	}
+	memset(wp->data(), '\0', wp->length());
+	click_ip6 *ip6=(click_ip6 *)wp->data();
+	click_tcp *tcph = (click_tcp *)(ip6+1);
+	click_udp *udph = (click_udp *)(ip6+1);
+
+	//set ipv6 header
+	ip6->ip6_flow = 0;	/* must set first: overlaps vfc */
+	ip6->ip6_v = 6;
+	ip6->ip6_plen = htons(ntohs(v4l3h->ip_len)-sizeof(click_ip));
+	ip6->ip6_hlim = v4l3h->ip_ttl + 0x40-0xff;
+	//Translate IP addresses
+	//ip6->ip6_src = IP6Address("64:ff9b::"+IPAddress(v4l3h->ip_dst).unparse().c_str());
+	ip6->ip6_dst = addressAndPort->mappedAddress._v6;
+
+	memcpy((unsigned char *)tcph, start_of_p, ntohs(ip6->ip6_plen));
+
+	if (v4l3h->ip_p == 6) //TCP
+	{
+		ip6->ip6_nxt = v4l3h->ip_p;
+		tcph->th_dport = htons(addressAndPort->_mappedPort);
+		tcph->th_sum = htons(in6_fast_cksum(&ip6->ip6_src, &ip6->ip6_dst, ip6->ip6_plen, ip6->ip6_nxt, tcph->th_sum, start_of_p, ip6->ip6_plen));
+	}
+
+	else if (v4l3h->ip_p == 17) //UDP
+	{
+		ip6->ip6_nxt = v4l3h->ip_p;
+		//udph->uh_sum = htons(in6_fast_cksum(&ip6->ip6_src, &ip6->ip6_dst, ip6->ip6_plen, ip6->ip6_nxt, udp->uh_sum, start_of_p, ip6->ip6_plen));
+	}
+
+	else if (v4l3h->ip_p == 1)
+	{
+		ip6->ip6_nxt=0x3a;
+		//icmp 6->4 translation is dealt by caller.
+	}
+
+	else
+	{
+		//will deal other protocols later
+	}
+
+	return wp;
+}
+
 
 Packet*
 DuoEcho::oneToOne(Packet *p){
@@ -184,15 +238,23 @@ DuoEcho::oneToOne(Packet *p){
 Packet*
 DuoEcho::twoToTwo(Packet *p){
 	//click_chatter("twoToTwo");
-	WritablePacket *wp = p->uniqueify();
-	click_ip6_frag *ip6_frag = 	reinterpret_cast<click_ip6_frag *>(wp->data()+14+40);
+	click_ip *iph = (click_ip *)(p->data());
+	click_tcp *tcph = (click_tcp *)(p->data()+20);
+	String v4wkpEmbed = "64:ff9b::" + IPAddress(iph->ip_dst).unparse();
+	//String *demit = &v4wkpEmbed;
+	IP6Address *adr = new IP6Address(v4wkpEmbed);
+	click_chatter("Did it work? %s",adr->unparse_expanded().c_str());
 	/*
-	click_chatter("ip6f_nxt = %d",ip6_frag->ip6f_nxt);
-	click_chatter("ip6f reserved = %d",ip6_frag->ip6f_reserved);
-	click_chatter("ip6f offlg= %d",ip6_frag->ip6f_offlg);
-	click_chatter("ip6f idnet= %d",ip6_frag->ip6f_ident);
-	 */
-	return wp;
+	const IPFlowID returnFlowID(ip6_src,sport,ip6_dst,dport);
+	Mapping *returnMapping = _returnMap.find(returnFlowID);
+	if (returnMapping){
+
+		return translate46(p,iph,tcph,returnMapping);
+	}
+	//Drop the packet if no existing maping is found
+	p->kill();
+	*/
+	return p->clone();
 }
 
 int

@@ -238,6 +238,7 @@ DuoEcho::oneToOne(Packet *p){
 
 Packet*
 DuoEcho::twoToTwo(Packet *p){
+	click_chatter("---------------From port 1 -> To port 1--------------");
 	//click_chatter("twoToTwo");
 	click_ip *iph = (click_ip *)(p->data());
 	click_tcp *tcph = (click_tcp *)(p->data()+20);
@@ -246,9 +247,10 @@ DuoEcho::twoToTwo(Packet *p){
 	click_chatter("Did it work? %s",adr->unparse_expanded().c_str());
 
 	const IPFlowID returnFlowID(iph->ip_src,tcph->th_sport,iph->ip_dst,tcph->th_dport);
+	click_chatter("Constructed flow id: %s",returnFlowID.unparse().c_str());
 	Mapping *returnMapping = _returnMap.find(returnFlowID);
 	if (returnMapping){
-
+		click_chatter("Mapping found, mapped IP is %s and port is %d",returnMapping->mappedAddress._v4.unparse().c_str(), returnMapping->_mappedPort);
 		return translate46(p,iph,tcph,returnMapping);
 	}
 	//Drop the packet if no existing maping is found

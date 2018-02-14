@@ -152,7 +152,8 @@ DuoEcho::translate46(Packet *p, const click_ip *v4l3h, const click_tcp *l4h, Map
 	ip6->ip6_plen = htons(ntohs(v4l3h->ip_len)-sizeof(click_ip));
 	ip6->ip6_hlim = v4l3h->ip_ttl + 0x40-0xff;
 	//Translate IP addresses
-	//ip6->ip6_src = IP6Address("64:ff9b::"+IPAddress(v4l3h->ip_dst).unparse().c_str());
+	//Append a WKP prefix to the v4 address and construct the embedded v6 address
+	ip6->ip6_src = IP6Address("64:ff9b::"+IPAddress(v4l3h->ip_src).unparse());
 	ip6->ip6_dst = addressAndPort->mappedAddress._v6;
 
 	memcpy((unsigned char *)tcph, start_of_p, ntohs(ip6->ip6_plen));
@@ -240,12 +241,11 @@ DuoEcho::twoToTwo(Packet *p){
 	//click_chatter("twoToTwo");
 	click_ip *iph = (click_ip *)(p->data());
 	click_tcp *tcph = (click_tcp *)(p->data()+20);
-	String v4wkpEmbed = "64:ff9b::" + IPAddress(iph->ip_dst).unparse();
-	//String *demit = &v4wkpEmbed;
-	IP6Address *adr = new IP6Address(v4wkpEmbed);
+	//String v4wkpEmbed = "64:ff9b::" + IPAddress(iph->ip_src).unparse();
+	IP6Address *adr = new IP6Address("64:ff9b::" + IPAddress(iph->ip_src).unparse());
 	click_chatter("Did it work? %s",adr->unparse_expanded().c_str());
-	/*
-	const IPFlowID returnFlowID(ip6_src,sport,ip6_dst,dport);
+
+	const IPFlowID returnFlowID(p);
 	Mapping *returnMapping = _returnMap.find(returnFlowID);
 	if (returnMapping){
 
@@ -253,8 +253,6 @@ DuoEcho::twoToTwo(Packet *p){
 	}
 	//Drop the packet if no existing maping is found
 	p->kill();
-	*/
-	return p->clone();
 }
 
 int

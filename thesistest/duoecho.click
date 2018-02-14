@@ -22,8 +22,6 @@ AR_DPDK1  ::   ARPResponder(DPDK1_ADD);
 
 DPDK1_FRAME_CLS  :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -)
 
-DPDK1_CLS  :: Classifier(12/0800, -);
-
 //--------Program Start----------
 
 DPDK0_IN

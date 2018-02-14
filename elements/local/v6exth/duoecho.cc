@@ -163,7 +163,11 @@ DuoEcho::translate46(Packet *p, const click_ip *v4l3h, const click_tcp *l4h, Map
 	{
 		ip6->ip6_nxt = v4l3h->ip_p;
 		tcph->th_dport = htons(addressAndPort->_mappedPort);
-		tcph->th_sum = htons(in6_fast_cksum(&ip6->ip6_src, &ip6->ip6_dst, ip6->ip6_plen, ip6->ip6_nxt, tcph->th_sum, start_of_p, ip6->ip6_plen));
+
+		uint16_t tlen = ntohs(v4l3h->ip_len);
+		uint16_t csum = click_in_cksum((unsigned char *) tcph, tlen);
+		tcph->th_sum = click_in_cksum_pseudohdr(csum, v4l3h, tlen);
+		//tcph->th_sum = htons(in6_fast_cksum(&ip6->ip6_src, &ip6->ip6_dst, ip6->ip6_plen, ip6->ip6_nxt, tcph->th_sum, start_of_p, ip6->ip6_plen));
 	}
 
 	else if (v4l3h->ip_p == 17) //UDP

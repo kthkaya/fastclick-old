@@ -250,7 +250,7 @@ DuoEcho::twoToTwo(Packet *p){
 	click_chatter("Constructed flow id: %s",returnFlowID.unparse().c_str());
 	Mapping *returnMapping = _returnMap.find(returnFlowID);
 	if (returnMapping){
-		click_chatter("Mapping found, mapped IP is %s and port is %d",returnMapping->mappedAddress._v4.unparse().c_str(), returnMapping->_mappedPort);
+		click_chatter("Mapping found, mapped IP is %s and port is %d",returnMapping->mappedAddress._v6.unparse().c_str(), returnMapping->_mappedPort);
 		return translate46(p,iph,tcph,returnMapping);
 	}
 	click_chatter("Mapping not found. Killing packet");

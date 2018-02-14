@@ -79,6 +79,7 @@ DuoEcho::translate64(Packet *p, const click_ip6 *v6l3h, const click_tcp *l4h, Ma
 	//set the src and dst address
 	ip->ip_src = addressAndPort->mappedAddress._v4;
 	ip->ip_dst = IP6Address(v6l3h->ip6_dst).ip4_address();
+	wp->set_dst_ip_anno(ip->ip_dst);
 
 	//copy the actual payload of packet
 	memcpy((unsigned char *)tcph, start_of_p, ntohs(v6l3h->ip6_plen));

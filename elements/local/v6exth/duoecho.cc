@@ -155,6 +155,7 @@ DuoEcho::translate46(Packet *p, const click_ip *v4l3h, const click_tcp *l4h, Map
 	//Append a WKP prefix to the v4 address and construct the embedded v6 address
 	ip6->ip6_src = IP6Address("64:ff9b::"+IPAddress(v4l3h->ip_src).unparse());
 	ip6->ip6_dst = addressAndPort->mappedAddress._v6;
+	SET_DST_IP6_ANNO(wp,ip6->ip6_dst);
 
 	memcpy((unsigned char *)tcph, start_of_p, ntohs(ip6->ip6_plen));
 

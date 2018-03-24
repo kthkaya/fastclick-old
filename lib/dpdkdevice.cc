@@ -19,6 +19,7 @@
 #include <click/config.h>
 #include <click/dpdkdevice.hh>
 #include <click/element.hh>
+#include <click/userutils.hh>
 #include <rte_errno.h>
 
 CLICK_DECLS
@@ -29,6 +30,25 @@ DPDKDevice::DPDKDevice() : port_id(-1), info() {
 DPDKDevice::DPDKDevice(unsigned port_id) : port_id(port_id) {
 };
 
+uint16_t DPDKDevice::get_device_vendor_id()
+{
+    return info.vendor_id;
+}
+
+String DPDKDevice::get_device_vendor_name()
+{
+    return info.vendor_name;
+}
+
+uint16_t DPDKDevice::get_device_id()
+{
+    return info.device_id;
+}
+
+const char *DPDKDevice::get_device_driver()
+{
+    return info.driver;
+}
 
 /* Wraps rte_eth_dev_socket_id(), which may return -1 for valid ports when NUMA
  * is not well supported. This function will return 0 instead in that case. */
@@ -136,6 +156,54 @@ struct rte_mempool *DPDKDevice::get_mpool(unsigned int socket_id) {
     return _pktmbuf_pools[socket_id];
 }
 
+/**
+ * Extracts from 'info' what is after the 'key'.
+ * E.g. an expected input is:
+ * XX:YY.Z Ethernet controller: Mellanox Technologies MT27700 Family [ConnectX-4]
+ * and we want to keep what is after our key 'Ethernet controller: '.
+ *
+ * @param info string to parse
+ * @param key substring to indicate the new index
+ * @return substring of info that succeeds the key
+ */
+static String parse_pci_info(String info, String key)
+{
+    String s;
+
+    // Extract what is after the keyword
+    s = info.substring(info.find_left(key) + key.length());
+    if (s.empty()) {
+        return String();
+    }
+
+    // Find the position of the delimiter
+    int pos = s.find_left(':') + 2;
+    if (pos < 0) {
+        return String();
+    }
+
+    // Extract what comes after the delimiter
+    s = s.substring(pos, s.find_left("\n") - pos);
+    if (s.empty()) {
+        return String();
+    }
+
+    return s;
+}
+
+/**
+ * Keeps the left-most substring of 'str'
+ * until the first occurence of the delimiter.
+ *
+ * @param str string to parse
+ * @param delimiter character that indicates where to stop
+ * @return substring of str that preceds the delimiter
+ */
+static String keep_token_left(String str, char delimiter)
+{
+    return str.substring(0, str.find_left(delimiter));
+}
+
 int DPDKDevice::initialize_device(ErrorHandler *errh)
 {
     struct rte_eth_conf dev_conf;
@@ -146,7 +214,26 @@ int DPDKDevice::initialize_device(ErrorHandler *errh)
 
     dev_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
     dev_conf.rx_adv_conf.rss_conf.rss_key = NULL;
-    dev_conf.rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IP | ETH_RSS_UDP | ETH_RSS_IP;
+    dev_conf.rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IP | ETH_RSS_UDP | ETH_RSS_TCP;
+
+    // Obtain general device information
+    if (dev_info.pci_dev) {
+        info.vendor_id = dev_info.pci_dev->id.vendor_id;
+        info.device_id = dev_info.pci_dev->id.device_id;
+    }
+    info.driver = dev_info.driver_name;
+    info.vendor_name = "Unknown";
+
+    // Combine vendor and device IDs
+    char vendor_and_dev[10];
+    sprintf(vendor_and_dev, "%x:%x", info.vendor_id, info.device_id);
+
+    // Retrieve more information about the vendor of this NIC
+    String dev_pci = shell_command_output_string("lspci -d " + String(vendor_and_dev), "", errh);
+    String long_vendor_name = parse_pci_info(dev_pci, "Ethernet controller");
+    if (!long_vendor_name.empty()) {
+        info.vendor_name = keep_token_left(long_vendor_name, ' ');
+    }
 
     //We must open at least one queue per direction
     if (info.rx_queues.size() == 0) {
@@ -237,6 +324,13 @@ int DPDKDevice::initialize_device(ErrorHandler *errh)
 void DPDKDevice::set_mac(EtherAddress mac) {
     assert(!_is_initialized);
     info.mac = mac;
+}
+
+EtherAddress DPDKDevice::get_mac() {
+    assert(_is_initialized);
+    struct ether_addr addr;
+    rte_eth_macaddr_get(port_id,&addr);
+    return EtherAddress((unsigned char*)&addr);
 }
 
 /**

@@ -1,0 +1,17 @@
+
+
+
+export PATH=$PATH:/usr/local/share/openvswitch/scripts
+export DB_SOCK=/usr/local/var/run/openvswitch/db.sock
+ovs-ctl --no-ovs-vswitchd start
+ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true other_config:dpdk-lcore-mask=0x2 other_config:dpdk-socket-mem=512 
+ovs-ctl --no-ovsdb-server --db-sock="$DB_SOCK" start
+ovs-vsctl list-br
+
+
+docker run -ti --name="hvnf" -v /dev/hugepages:/dev/hugepages -v /usr/local/var/run/openvswitch:/var/run/openvswitch --privileged dpdkclick:latest
+docker run -ti --name="src" -v /dev/hugepages:/dev/hugepages -v /usr/local/var/run/openvswitch:/var/run/openvswitch --privileged clickdpdk:latest
+
+docker run -ti --name="snk" -v /dev/hugepages:/dev/hugepages -v /usr/local/var/run/openvswitch:/var/run/openvswitch --privileged dpdkclick:latest
+
+

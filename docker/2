@@ -1,0 +1,50 @@
+  insmod /usr/src/dpdk-17.11/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+
+ 1202  export INSTALL_PATH="/usr/src"
+ 1203  export RTE_SDK="$INSTALL_PATH/dpdk-17.11" 
+ 1204  export RTE_TARGET="x86_64-native-linuxapp-gcc" 
+ 1205  modinfo ${RTE_SDK}/${RTE_TARGET}/kmod/igb_uio.ko | grep vermagic
+ 1206  lsb_release -a
+ 1207  cat /proc/version
+ 1208  ls
+ 1209  cd /usr/src/
+ 1210  ls
+ 1211  cd dpdk-17.11
+ 1212  ls
+ 1213  make uninstall
+ 1214  dpdk-devbind.py -s
+ 1215  ls
+ 1216  cd usertools/
+ 1217  ls
+ 1218  ./dpdk-setup.sh 
+ 1219  ls
+ 1220  cd ..
+ 1221  ls
+ 1222  rm dpdk-17.11
+ 1223  rm -R dpdk-17.11
+ 1224  tar -xvf dpdk-17.11.tar.xz 
+ 1225  ls
+ 1226  cd dpdk-17.11
+ 1227  export DPDK_BUILD="$RTE_DIR/$RTE_TARGET"
+ 1228  echo $DPDK_BUILD
+ 1229  export DPDK_BUILD="$RTE_SDK/$RTE_TARGET"
+ 1230  echo $DPDK_BUILD
+ 1231  make install T=$DPDK_TARGET DESTDIR=install
+ 1232  make install T=$RTE_TARGET DESTDIR=install
+ 1233  history « grep modinfo
+ 1234  history | grep modinfo
+ 1235  modprobe uio
+ 1236  insmod /usr/src/dpdk-17.11/x86_64-native-linuxapp-gcc/kmod/igb_uio.ko
+
+
+export EAL_PARAMS="-l 6-7 --master-lcore 6 -n 1 \
+-m 1024 --file-prefix=nf --no-pci \
+--vdev=virtio_user0,path=/var/run/openvswitch/NF-eth0,mac=00:00:92:00:00:02 \
+--vdev=virtio_user1,path=/var/run/openvswitch/NF-eth1,mac=00:00:92:00:00:03"
+
+
+
+export EAL_PARAMS="-l 5-7 --master-lcore 5 -n 1 \
+-m 1024 --file-prefix=src --no-pci \
+--vdev=virtio_user0,path=/var/run/openvswitch/SRC,mac=00:00:92:00:00:01 \
+--vdev=virtio_user1,path=/var/run/openvswitch/SNK,mac=00:00:92:00:00:04"

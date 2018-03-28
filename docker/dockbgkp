@@ -1,0 +1,50 @@
+FROM ubuntu:latest
+
+######################
+#Initial Preparations#
+######################
+
+RUN echo "Initial Preparations ..."; echo
+
+RUN apt-get update && apt-get install -y \
+	build-essential automake git gcc tar wget python-pip libcap-ng-dev \
+	gawk pciutils linux-headers-$(uname -a | awk '{print $3}') nano kmod
+RUN pip install -U pip six
+
+#################
+#Installing DPDK#
+#################
+RUN echo "Installing DPDK ..."; echo 
+
+ENV INSTALL_PATH "/usr/src"
+ENV DPDK_DIR "$INSTALL_PATH/dpdk-17.11"; \
+ENV DPDK_TARGET "x86_64-native-linuxapp-gcc"; \
+ENV DPDK_BUILD "$DPDK_DIR/$DPDK_TARGET"; \
+
+RUN cd $INSTALL_PATH; \
+wget http://fast.dpdk.org/rel/dpdk-17.11.tar.xz; \
+tar xf dpdk-17.11.tar.xz; \
+cd $DPDK_DIR
+make install T=$DPDK_TARGET DESTDIR=install
+
+######################
+#Installing fastclick#
+######################
+echo; echo; echo; \
+echo "Installing fastclick ..."; echo; \
+
+ENV CLICK_DIR "$INSTALL_PATH/fastclick"
+GIT_URL="https://github.com/kthkaya/fastclick"; \
+
+cd $INSTALL_PATH; \
+git clone $GIT_URL; \
+cd $CLICK_DIR; \
+RUN ./build_click.sh
+
+######
+#Done#
+######
+echo; echo; echo; \
+echo "Done. Starting bash ..."; echo; \
+
+CMD ["/bin/bash"]

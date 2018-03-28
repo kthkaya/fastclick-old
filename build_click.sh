@@ -18,6 +18,6 @@ cd "$CLICK_DIR"
 --enable-ip6 --enable-local --enable-bound-port-transfer --enable-dpdk --enable-batch --with-netmap=no \
 --enable-zerocopy --enable-dpdk-pool --disable-dpdk-packet
 
-echo "Making fastclick in $CLICK_DIR"
+echo "Makin fastclick in $CLICK_DIR"
 make -j4 && make install
 

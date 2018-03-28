@@ -20,7 +20,7 @@ RUN echo "Installing DPDK ..."
 ENV INSTALL_PATH "/usr/src"
 ENV RTE_SDK "$INSTALL_PATH/dpdk-17.11" 
 ENV RTE_TARGET "x86_64-native-linuxapp-gcc" 
-ENV DPDK_BUILD "$RTE_DIR/$RTE_TARGET"
+ENV DPDK_BUILD "$RTE_SDK/$RTE_TARGET"
 
 RUN cd $INSTALL_PATH; \
 wget http://fast.dpdk.org/rel/dpdk-17.11.tar.xz; \
